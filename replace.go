@@ -7,7 +7,7 @@ import (
 )
 
 func ReplaceAllLike(s string, rm map[string]string) string {
-	res := s
+	// sort replacement map by length
 	type pair struct {
 		old, new string
 	}
@@ -18,31 +18,57 @@ func ReplaceAllLike(s string, rm map[string]string) string {
 	sort.SliceStable(pairs, func(i, j int) bool {
 		return len(pairs[i].old) > len(pairs[j].old)
 	})
-	for _, p := range pairs {
-		res = ReplaceLike(res, p.old, p.new)
+	// compare and replace until no match found
+	var (
+		final strings.Builder
+		tmp   = s
+	)
+	for {
+		var (
+			idx        int
+			olds, news string
+		)
+		// find the longest match
+		for _, p := range pairs {
+			idx = strIndexFold(tmp, p.old)
+			if idx >= 0 {
+				olds, news = p.old, p.new
+				break
+			}
+		}
+		// no match found
+		if idx < 0 {
+			final.WriteString(tmp)
+			break
+		}
+		ori := tmp[idx : idx+len(olds)]
+		newr := mockString(ori, news)
+		final.WriteString(tmp[0:idx])
+		final.WriteString(newr)
+		tmp = tmp[idx+len(olds):]
 	}
-	return res
+	return final.String()
 }
 
 func ReplaceLike(s, olds, news string) string {
 	var (
-		final string
-		res   = s
+		final strings.Builder
+		tmp   = s
 	)
+	// compare and replace until no match found
 	for {
-		idx := indexWithoutCase(res, olds)
+		idx := strIndexFold(tmp, olds)
 		if idx < 0 {
-			final += res
+			final.WriteString(tmp)
 			break
 		}
-		ori := res[idx : idx+len(olds)]
+		ori := tmp[idx : idx+len(olds)]
 		newr := mockString(ori, news)
-		tmp := strings.Replace(res, ori, newr, 1)
-
-		res = tmp[idx+len(newr):]
-		final += tmp[0 : idx+len(newr)]
+		final.WriteString(tmp[0:idx])
+		final.WriteString(newr)
+		tmp = tmp[idx+len(olds):]
 	}
-	return final
+	return final.String()
 }
 
 func mockString(src, dest string) string {
@@ -53,6 +79,7 @@ func mockString(src, dest string) string {
 	} else if isAllTitle(src) {
 		return strings.Title(dest)
 	} else {
+		// no changes
 		return dest
 	}
 }
@@ -90,7 +117,7 @@ func isAllTitle(s string) bool {
 	return true
 }
 
-func indexWithoutCase(s string, substr string) int {
+func strIndexFold(s string, substr string) int {
 	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
 	return strings.Index(s, substr)
 }

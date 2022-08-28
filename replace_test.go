@@ -11,6 +11,7 @@ func TestReplaceLike(t *testing.T) {
 		want string
 	}{
 		{"normal", "hello world", "lo", "10", "hel10 world"},
+		{"misc", "hElLo woRld", "Llo", "l10", "hEl10 woRld"},
 		{"all lower", "how are you", "are", "is", "how is you"},
 		{"all upper", "HOW ARE YOU", "are", "is", "HOW IS YOU"},
 		{"all title", "How Are You", "are", "is", "How Is You"},
@@ -35,6 +36,11 @@ func BenchmarkReplaceLike(b *testing.B) {
 }
 
 func TestReplaceAllLike(t *testing.T) {
+	rm0 := map[string]string{
+		"abc":            "123",
+		"github.com":     "gitlab.com",
+		"github.com/abc": "bitbucket.org/def",
+	}
 	rm1 := map[string]string{
 		"pluralsight.com":   "hello.org",
 		"pluralsight":       "whaohelo",
@@ -51,12 +57,20 @@ func TestReplaceAllLike(t *testing.T) {
 		"Jay2645/Unreal-Polygonal-Map-Gen": "John1234/MapTabs",
 		"Jay2645/IslandGenerator":          "John1234/MapTabs",
 	}
+	rm3 := map[string]string{
+		"ABCD": "1234",
+		"123":  "def",
+		"ef":   "XX",
+	}
 	tests := []struct {
 		name string
 		s    string
 		rm   map[string]string
 		want string
 	}{
+		{"no change", "https://gitlab.com/ab3C/repo", rm0, "https://gitlab.com/ab3C/repo"},
+		{"check order", "https://github.com/abc/repo", rm0, "https://bitbucket.org/def/repo"},
+		{"self repeat", "abcd-123-ef", rm3, "1234-def-xx"},
 		{"infinite bug", `                        help="MultiChain path prefix (default: %(default)s)")`, rm1, `                        help="SingleChain path prefix (default: %(default)s)")`},
 		{"longer fix", `www.pluralsight.com`, rm1, `www.hello.org`},
 		{"test 1", `Jay Stevens is Jay2645`, rm2, `John Doe is John1234`},
@@ -67,5 +81,17 @@ func TestReplaceAllLike(t *testing.T) {
 				t.Errorf("ReplaceAllLike() ori = %q, got = %q, want %q", tt.s, got, tt.want)
 			}
 		})
+	}
+}
+
+func BenchmarkReplaceAllLike(b *testing.B) {
+	rm := map[string]string{
+		"abc":            "123",
+		"github.com":     "gitlab.com",
+		"github.com/abc": "bitbucket.org/def",
+	}
+	s := "Hello World"
+	for i := 0; i < b.N; i++ {
+		_ = ReplaceAllLike(s, rm)
 	}
 }
