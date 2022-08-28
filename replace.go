@@ -117,7 +117,7 @@ func isAllTitle(s string) bool {
 	return true
 }
 
-func strIndexFold(s string, substr string) int {
+func strIndexFold(s, substr string) int {
 	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
 	return strings.Index(s, substr)
 }
