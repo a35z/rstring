@@ -29,7 +29,7 @@ func TestReplaceLike(t *testing.T) {
 }
 
 func BenchmarkReplaceLike(b *testing.B) {
-	s, o, n := "Hello World", "hello", "hello-first"
+	s, o, n := "Aloha Text World", "aloha", "hello-first"
 	for i := 0; i < b.N; i++ {
 		_ = ReplaceLike(s, o, n)
 	}
@@ -86,11 +86,12 @@ func TestReplaceAllLike(t *testing.T) {
 
 func BenchmarkReplaceAllLike(b *testing.B) {
 	rm := map[string]string{
+		"Hello":          "Aloha",
 		"abc":            "123",
 		"github.com":     "gitlab.com",
 		"github.com/abc": "bitbucket.org/def",
 	}
-	s := "Hello World"
+	s := "Hello Text World"
 	for i := 0; i < b.N; i++ {
 		_ = ReplaceAllLike(s, rm)
 	}
